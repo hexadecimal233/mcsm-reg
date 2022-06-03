@@ -1,0 +1,3 @@
+[submodule "static/register"]
+	path = static/register
+	url = https://e.coding.net/skytech/BetterMcsmWeb/mcsm-reg-frontend.git
