@@ -87,7 +87,6 @@ app.get("/api/captcha", (req, res) => {
   });
   req.session.mcsmreg_captcha = CRC32.str(captcha.text.toLowerCase());
   res.setHeader("Content-Type", "image/svg+xml");
-  res.cookie("captcha", req.session);
   res.send(captcha.data);
 });
 
