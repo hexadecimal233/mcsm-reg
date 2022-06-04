@@ -30,7 +30,7 @@ app.use(
 
 //数据库
 
-if(!fsExtra.existsSync(DBFile)) {
+if (!fsExtra.existsSync(DBFile)) {
   fsExtra.createFileSync(DBFile);
   fsExtra.writeJSONSync(DBFile, {});
 }
@@ -106,7 +106,14 @@ app.use("/api/admin", accountLimiter);
 app.post("/api/register", async (req, res) => {
   var username = req.body.username;
   var password = req.body.password;
-  var captcha = req.body.captcha.toLowerCase();
+  var captcha0 = req.body.captcha;
+  if (captcha0 == null) {
+    return res.json({
+      status: 400,
+      msg: "验证码不能为空",
+    });
+  }
+  var captcha = captcha0.toLowerCase();
 
   //验证码检测
   console.log("验证码校验: ", CRC32.str(captcha), req.session.mcsmreg_captcha);
