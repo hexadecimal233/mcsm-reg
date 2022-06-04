@@ -99,8 +99,15 @@ const accountLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const adminApiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 25,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use("/api/register", accountLimiter);
-app.use("/api/admin", accountLimiter);
+app.use("/api/admin", adminApiLimiter);
 
 //注册
 app.post("/api/register", async (req, res) => {
