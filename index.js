@@ -4,7 +4,6 @@ const axios = require("axios");
 const svgCaptcha = require("svg-captcha");
 const session = require("express-session");
 const cookoeParser = require("cookie-parser");
-const CRC32 = require("crc-32");
 const fsExtra = require("fs-extra");
 
 const APIKEY = "";
@@ -85,7 +84,7 @@ app.get("/api/captcha", (req, res) => {
     noise: 3,
     ignoreChars: "0oO1ilI",
   });
-  req.session.mcsmreg_captcha = CRC32.str(captcha.text.toLowerCase());
+  req.session.mcsmreg_captcha = captcha.text.toLowerCase();
   res.setHeader("Content-Type", "image/svg+xml");
   res.send(captcha.data);
 });
@@ -124,7 +123,7 @@ app.post("/api/register", async (req, res) => {
 
   //验证码检测
   console.log("验证码校验: ", CRC32.str(captcha), req.session.mcsmreg_captcha);
-  if (CRC32.str(captcha) !== req.session.mcsmreg_captcha) {
+  if (captcha !== req.session.mcsmreg_captcha) {
     delete req.session.mcsmreg_captcha;
     return res.json({
       status: 403,
