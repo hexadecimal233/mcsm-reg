@@ -7,11 +7,14 @@ const cookoeParser = require("cookie-parser");
 const CRC32 = require("crc-32");
 const fsExtra = require("fs-extra");
 
-const APIKEY = "你的apikey";
-const APIURL = "你的面板连接";
+const APIKEY = "";
+const APIURL = "";
 const PORT = 3000;
-const PASSWORD = "密码";
+const PASSWORD = "";
 const DBFile = "./db.json";
+const HEADERS = {
+  "Content-Type": "application/json; charset=utf-8",
+};
 
 const app = express();
 const bodyParser = require("body-parser");
@@ -29,20 +32,17 @@ app.use(
 );
 
 //数据库
-
 if (!fsExtra.existsSync(DBFile)) {
   fsExtra.createFileSync(DBFile);
   fsExtra.writeJSONSync(DBFile, {});
 }
 
 const database = {
-  add(username, password, timestamp, node, launchFile) {
+  add(username, password, timestamp) {
     let DB = fsExtra.readJSONSync(DBFile);
     DB[username] = {
       password: password,
       timestamp: timestamp,
-      node: node,
-      launchFile: launchFile,
     };
     fsExtra.writeJSONSync(DBFile, DB);
   },
@@ -91,7 +91,7 @@ app.get("/api/captcha", (req, res) => {
 });
 
 //接口限速
-const accountLimiter = rateLimit({
+const regLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 3,
   standardHeaders: true,
@@ -105,8 +105,9 @@ const adminApiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use("/api/register", accountLimiter);
+app.use("/api/register", regLimiter);
 app.use("/api/admin", adminApiLimiter);
+app.use("/api/renew", adminApiLimiter);
 
 //注册
 app.post("/api/register", async (req, res) => {
@@ -148,26 +149,103 @@ app.post("/api/register", async (req, res) => {
   //调用MCSM API
   console.log(username, "正在被创建");
   let resp = await axios
-    .post(APIURL + "/api/auth?apikey=" + APIKEY, data, {
+    .post(APIURL + "/api/auth", data, {
       timeout: 5000,
-      headers: {
-        "Content-Type": "application/json",
+      headers: HEADERS,
+      params: {
+        apikey: APIKEY,
       },
     })
     .catch((e) => {
       console.log(username, "创建失败", e.response.data.data);
       return res.json({
         status: 400,
-        msg: `${e.code}: ${e.response.data.data}`,
+        msg: `${e.response.data.data}`,
       });
     });
 
   //返回成功
   if (resp.status == 200 && resp.data.status == 200) {
-    database.add(username, password, Date.now(), -1, "none");
+    console.log(username, password, Date.now());
+    database.add(username, password, Date.now());
     return res.json({
       status: 200,
       msg: "账号创建成功",
+    });
+  }
+});
+
+//续期
+app.post("/api/renew", async (req, res) => {
+  var guid = req.body.guid;
+  var uuid = req.body.uuid;
+
+  if (!guid || !uuid)
+    return res.json({
+      status: 400,
+      msg: "GUID/UUID不能为空",
+    });
+
+  const queryParams = {
+    uuid: uuid,
+    remote_uuid: guid,
+    apikey: APIKEY,
+  };
+
+  //调用MCSM API
+  console.log(guid, uuid, "续期");
+  let respInst = await axios
+    .get(APIURL + "/api/instance", {
+      timeout: 5000,
+      headers: HEADERS,
+      params: queryParams,
+    })
+    .catch((e) => {
+      console.log(guid, uuid, "实例获取错误");
+      return res.json({
+        status: 400,
+        msg: "实例获取错误",
+      });
+    });
+
+  if (respInst.status != 200 || respInst.data.status != 200) return;
+  let inst = respInst.data.data.config;
+
+  let origDate = new Date(inst.endTime);
+
+  let time = new Date();
+  let oldTime = time.getTime();
+  time.setTime(oldTime + 1000 * 60 * 60 * 24 * 3);
+  let canRenew = origDate.getTime() - oldTime <= 1000 * 60 * 60 * 24;
+  inst.endTime = time.toLocaleDateString();
+
+  if (!canRenew) {
+    console.log(guid, uuid, "续期太快");
+    return res.json({
+      status: 400,
+      msg: "再等等吧~",
+    });
+  }
+
+  let resp2 = await axios
+    .put(APIURL + "/api/instance", inst, {
+      timeout: 5000,
+      headers: HEADERS,
+      params: queryParams,
+    })
+    .catch((e) => {
+      console.log(guid, uuid, "续期失败");
+      return res.json({
+        status: 400,
+        msg: "续期失败",
+      });
+    });
+
+  if (resp2.status == 200 && resp2.data.status == 200) {
+    console.log(guid, uuid, "续期成功 结束时间", inst.endTime);
+    return res.json({
+      status: 200,
+      msg: "续期成功, 请等三天后再来!",
     });
   }
 });
