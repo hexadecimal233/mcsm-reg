@@ -214,15 +214,15 @@ app.post("/api/renew", async (req, res) => {
 
   let time = new Date();
   let oldTime = time.getTime();
-  time.setTime(oldTime + 1000 * 60 * 60 * 24 * 3);
-  let canRenew = origDate.getTime() - oldTime <= 1000 * 60 * 60 * 24;
+  time.setTime(oldTime + 1000 * 60 * 60 * 24 * 7);
+  let canRenew = origDate.getTime() - oldTime <= 1000 * 60 * 60 * 24 * 3;
   inst.endTime = time.toLocaleDateString();
 
   if (!canRenew) {
     console.log(guid, uuid, "续期太快");
     return res.json({
       status: 400,
-      msg: "再等等吧~",
+      msg: "再等等吧~到期前3天可续",
     });
   }
 
