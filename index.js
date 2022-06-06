@@ -122,7 +122,7 @@ app.post("/api/register", async (req, res) => {
   var captcha = captcha0.toLowerCase();
 
   //验证码检测
-  console.log("验证码校验: ", CRC32.str(captcha), req.session.mcsmreg_captcha);
+  console.log("验证码校验: ", captcha, req.session.mcsmreg_captcha);
   if (captcha !== req.session.mcsmreg_captcha) {
     delete req.session.mcsmreg_captcha;
     return res.json({
