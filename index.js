@@ -5,12 +5,15 @@ const svgCaptcha = require("svg-captcha");
 const session = require("express-session");
 const cookoeParser = require("cookie-parser");
 const fsExtra = require("fs-extra");
+const data = require("./data.json");
 
-const APIKEY = "";
-const APIURL = "";
-const PORT = 3000;
-const PASSWORD = "";
-const DBFile = "./db.json";
+const APIKEY = data.APIKEY;
+const APIKEY2 = data.APIKEY2;
+const APIURL = data.APIURL;
+const APIURL2 = data.APIURL2;
+const PORT = data.PORT;
+const PASSWORD = data.PASSWORD;
+const DBFile = data.DBFile;
 const HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
 };
@@ -113,6 +116,7 @@ app.post("/api/register", async (req, res) => {
   var username = req.body.username;
   var password = req.body.password;
   var captcha0 = req.body.captcha;
+  var panelNode = !req.body.node;
   if (captcha0 == null) {
     return res.json({
       status: 400,
@@ -147,12 +151,14 @@ app.post("/api/register", async (req, res) => {
 
   //调用MCSM API
   console.log(username, "正在被创建");
+  let currApi = panelNode ? APIURL : APIURL2;
+  let currApiKey = panelNode ? APIKEY : APIKEY2;
   let resp = await axios
-    .post(APIURL + "/api/auth", data, {
+    .post(currApi + "/api/auth", data, {
       timeout: 5000,
       headers: HEADERS,
       params: {
-        apikey: APIKEY,
+        apikey: currApiKey,
       },
     })
     .catch((e) => {
@@ -178,6 +184,10 @@ app.post("/api/register", async (req, res) => {
 app.post("/api/renew", async (req, res) => {
   var guid = req.body.guid;
   var uuid = req.body.uuid;
+  var panelNode = !req.body.node;
+
+  let currApi = panelNode ? APIURL : APIURL2;
+  let currApiKey = panelNode ? APIKEY : APIKEY2;
 
   if (!guid || !uuid)
     return res.json({
@@ -188,13 +198,13 @@ app.post("/api/renew", async (req, res) => {
   const queryParams = {
     uuid: uuid,
     remote_uuid: guid,
-    apikey: APIKEY,
+    apikey: currApiKey,
   };
 
   //调用MCSM API
   console.log(guid, uuid, "续期");
   let respInst = await axios
-    .get(APIURL + "/api/instance", {
+    .get(currApi + "/api/instance", {
       timeout: 5000,
       headers: HEADERS,
       params: queryParams,
@@ -227,7 +237,7 @@ app.post("/api/renew", async (req, res) => {
   }
 
   let resp2 = await axios
-    .put(APIURL + "/api/instance", inst, {
+    .put(currApi + "/api/instance", inst, {
       timeout: 5000,
       headers: HEADERS,
       params: queryParams,
@@ -260,7 +270,7 @@ app.get("/api/admin/queryreg", (req, res) => {
 
 app.get("/api/admin/deletereg", (req, res) => {
   if (req.query.key == PASSWORD && req.query.name) {
-    console.log("删除注册", req.query.name);
+    console.log("删除注册日志", req.query.name);
     database.remove(req.query.name);
     return res.status(200).json({});
   } else {

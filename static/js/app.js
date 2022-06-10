@@ -2,6 +2,7 @@ const organization = "";
 const customer = "";
 const link = "";
 const LOGIN_PAGE = "";
+const LOGIN_PAGE2 = "";
 
 function u_onload() {
   document.getElementById(

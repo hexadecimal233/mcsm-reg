@@ -1,0 +1,9 @@
+{
+    "APIKEY": "",
+    "APIKEY2": "",
+    "APIURL": "",
+    "APIURL2": "",
+    "PORT": 3000,
+    "PASSWORD": "",
+    "DBFile": "./db.json"
+}

@@ -5,6 +5,7 @@ window.onload = function () {
 function renew() {
   var guid = document.getElementById("guid").value;
   var uuid = document.getElementById("uuid").value;
+  var node = document.getElementById("nodesel").checked;
 
   console.log(guid, uuid);
 
@@ -45,6 +46,7 @@ function renew() {
   var sendData = {
     guid: guid,
     uuid: uuid,
+    node: node,
   };
   xhr.send(JSON.stringify(sendData));
 }

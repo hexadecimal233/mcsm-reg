@@ -11,6 +11,7 @@ function register() {
   var username = document.getElementById("username").value;
   var password = document.getElementById("password").value;
   var captcha = document.getElementById("captcha").value;
+  var node = document.getElementById("nodesel").checked;
 
   console.log(username, password);
 
@@ -59,6 +60,7 @@ function register() {
     username: username,
     password: password,
     captcha: captcha,
+    node: node,
   };
   xhr.send(JSON.stringify(sendData));
 }
@@ -68,7 +70,7 @@ function regSuccess() {
     .fire("注册成功!", "你已注册成功! 请等待管理员处理为你创建实例.", "success")
     .then((result) => {
       if (result.isConfirmed) {
-        window.location = LOGIN_PAGE;
+        window.location = document.getElementById("nodesel").checked ? LOGIN_PAGE2 : LOGIN_PAGE;
       }
     });
 }
