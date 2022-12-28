@@ -4,6 +4,8 @@
 
 拥有一个精致 GUI 的 MCSM 注册系统
 
+~~最初为[蓝天云](https://docs.qq.com/doc/DT2NFemVVUWJNeUhO)做的~~
+
 ## 🚀 使用方法
 
 注册: 打开 `http://your.website/register/` 即可
